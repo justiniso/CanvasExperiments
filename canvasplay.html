@@ -1,0 +1,206 @@
+
+
+
+<div id="content-wrap">
+	<div class="canvas-wrap">
+		<input id="play1" type="button" value="play"/>
+		<span>Circle Animation</circle>
+		<br>
+		<canvas id="circle" width="600" height="600"></canvas>
+	</div>
+
+	<div class="canvas-wrap">
+		<input id="play2" type="button" value="play"/>
+		<span>Trace Mouse</span>
+		<br>
+		<canvas id="trace" width="600" height="600"></canvas>
+	</div>
+
+	<div class="canvas-wrap">
+		<input id="play3" type="button" value="play"/>
+		<span>Lens Flare</span>
+		<br>
+		<canvas id="flare" width="600" height="600"></canvas>
+	</div>
+</div>
+
+
+
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script>
+
+
+
+<!-- JAVASCRIPT -->
+<script type="text/javascript">
+
+var circleCanvas = document.getElementById('circle');
+var traceCanvas = document.getElementById('trace');
+var flareCanvas = document.getElementById('flare');
+var ctx = null;
+var angle = 0;
+var angle_rate = 0.1;
+var angle_accel = 0.01;
+var frame_rate = 0.1;
+var stroke_interval;
+
+
+
+// Browsers with canvas support: 
+if (circleCanvas.getContext('2d')) {
+	
+
+	var Lighting = {
+		createLensFlare: function(ctx, x, y, modifier) {
+			var baseGradient = ctx.createRadialGradient(
+				x, // startX
+				y, // startY
+				10*modifier, // startR
+				x, // endX
+				y, // endY
+				300*modifier); // endR
+			baseGradient.addColorStop(0.00, 'rgba(255, 255, 255, 1)');
+			baseGradient.addColorStop(0.10, 'rgba(255, 251, 207, 0.6)');
+			baseGradient.addColorStop(0.20, 'rgba(255, 225, 207, 0.4)');
+			baseGradient.addColorStop(0.25, 'rgba(255, 207, 207, 0.3)');
+			baseGradient.addColorStop(0.40, 'rgba(255, 246, 207, 0.20)');
+			baseGradient.addColorStop(0.50, 'rgba(245, 255, 207, 0.15)');
+			baseGradient.addColorStop(0.60, 'rgba(210, 255, 207, 0.10)');
+			baseGradient.addColorStop(0.75, 'rgba(210, 255, 250, 0.08)');
+			baseGradient.addColorStop(0.90, 'rgba(210, 230, 255, 0.06)');
+			baseGradient.addColorStop(0.95, 'rgba(210, 210, 255, 0.05)');
+			baseGradient.addColorStop(1.00, 'rgba(220, 210, 255, 0.01)');
+
+			ctx.fillStyle = baseGradient;
+			ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height);
+		}
+	};
+
+	function drawLensFlare() {
+		ctx = flareCanvas.getContext('2d');
+		ctx.fillStyle = 'black';
+		ctx.clearRect(0,0,flareCanvas.width, flareCanvas.height);
+		ctx.fillRect(0,0,flareCanvas.width, flareCanvas.height);
+
+		Lighting.createLensFlare(ctx, 300, 300, 1);
+	}
+	
+	function trackMouse() {
+		var mouseX;
+		var mouseY;
+		var mouseXPos;
+		var mouseYPos;
+
+		ctx = traceCanvas.getContext('2d');
+		ctx.clearRect(0,0, traceCanvas.width, traceCanvas.height);
+
+		traceCanvas.onmousemove = function(e){
+			ctx.clearRect(0,0, traceCanvas.width, traceCanvas.height);
+			
+			mouseX = e.pageX;
+			mouseY = e.pageY;
+			// finds the mouse position within the canvas
+			mouseXPos = mouseX - traceCanvas.offsetLeft;
+			mouseYPos = mouseY - traceCanvas.offsetTop;
+			
+			// define the stroke style
+			ctx.strokeStyle = 'black';
+			
+			// draw a line from 0,0 to mouse position
+			ctx.beginPath();
+			ctx.moveTo(0,0);
+			ctx.lineTo(mouseXPos, mouseYPos);
+			ctx.closePath();
+			
+			// fill the stroke
+			ctx.stroke();
+			
+
+
+
+		};
+
+
+	}
+
+	
+
+	function drawCircle() {
+
+		// prep the canvas
+		ctx = circleCanvas.getContext('2d');
+		ctx.clearRect(0, 0, circleCanvas.width, circleCanvas.height); // clears the canvas in section (x, y, width, height)
+
+		ctx.beginPath();
+		ctx.arc(300, 300, 80, 0, angle, false); // (center left, center top, radius, start angle, end angle, clockwise boolean)
+		ctx.strokeStyle = "#999999";
+		ctx.lineWidth = 35;
+		ctx.lineCap = "round"
+		ctx.shadowColor = "#aeaeae";
+		ctx.shadowBlur = 30;
+		ctx.shadowOffsetY = 2;
+		ctx.stroke();
+		ctx.closePath();
+
+		if (angle<Math.PI*0.25) {
+
+			angle = angle + angle_rate;
+		}
+		
+		else if (angle>=Math.PI*0.25 && angle<Math.PI*2) {
+			angle = angle*(1+angle_rate);
+			angle_rate = angle_rate + angle_accel;
+		}
+
+		else {stopStroke()}
+
+
+	}
+
+	function stopStroke() {
+
+		clearInterval(stroke_interval);
+
+	}
+
+
+
+	function play() {
+		stroke_interval = setInterval(drawCircle, 50);
+	}
+
+
+	$("#play1").mouseup(play);
+	$('#play2').mouseup(trackMouse);
+	$('#play3').mouseup(drawLensFlare);
+
+
+}
+
+// Browsers without canvas support:
+else {
+	alert('no canvas support');
+}
+
+</script>
+
+<style type="text/css">
+
+#content-wrap {
+	width: 100%;
+	border: 1px solid #d5d5d5;
+}
+
+.canvas-wrap, canvas {
+	border: 1px solid #d5d5d5;
+	float: left;
+}
+
+.canvas-wrap {
+	max-width: 600px;
+	background: none;
+}
+
+
+
+</style>
